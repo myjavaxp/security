@@ -29,6 +29,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeRequests()
                 .antMatchers("/hello/**").hasAnyAuthority("hello")
+                .antMatchers("/druid/**").hasRole("admin")
                 .antMatchers("/admin/**").hasRole("admin")
                 .antMatchers("/user/**").access("hasAnyRole('admin','user')")
                 .anyRequest().authenticated()
