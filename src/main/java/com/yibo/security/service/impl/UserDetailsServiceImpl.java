@@ -9,7 +9,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
+
+import static java.util.Collections.emptyList;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -29,6 +30,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 true,
                 true,
                 true,
-                new ArrayList<>());
+                emptyList());
     }
 }

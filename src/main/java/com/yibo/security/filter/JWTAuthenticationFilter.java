@@ -1,5 +1,6 @@
 package com.yibo.security.filter;
 
+import com.yibo.security.constants.EncodeConstant;
 import com.yibo.security.entity.Role;
 import com.yibo.security.entity.UserEntity;
 import com.yibo.security.service.ResourceService;
@@ -60,11 +61,10 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
         if (token != null) {
             // parse the token.
             String user = Jwts.parser()
-                    .setSigningKey("yibo")
+                    .setSigningKey(EncodeConstant.SIGNING_KEY)
                     .parseClaimsJws(token.replace("Bearer ", ""))
                     .getBody()
                     .getSubject();
-
             if (user != null) {
                 UserEntity userEntity = userService.findUserByUsername(user);
                 Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
@@ -75,7 +75,7 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
                     resourceService.getPermissionsByRoleId(role.getId()).forEach(
                             resource -> grantedAuthorities.add(new SimpleGrantedAuthority(resource.getUrl())));
                 }
-                return new UsernamePasswordAuthenticationToken(user, null, grantedAuthorities);
+                return new UsernamePasswordAuthenticationToken(userEntity.getUsername(), userEntity.getPassword(), grantedAuthorities);
             }
             return null;
         }

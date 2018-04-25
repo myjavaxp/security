@@ -83,5 +83,6 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>
+        <finalName>security</finalName>
     </build>
 </project>
