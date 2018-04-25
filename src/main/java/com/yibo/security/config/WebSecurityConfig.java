@@ -1,6 +1,7 @@
 package com.yibo.security.config;
 
 import com.yibo.security.service.impl.UserDetailsServiceImpl;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -15,14 +16,20 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Resource
     private UserDetailsServiceImpl userDetailsService;
 
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(new BCryptPasswordEncoder());
+        auth.userDetailsService(userDetailsService).passwordEncoder(bCryptPasswordEncoder());
     }
 
     @Override
     public void configure(WebSecurity web) {
-        web.ignoring().antMatchers("/any/**");
+        web.ignoring().antMatchers("/any/**")
+                .and().ignoring().antMatchers("/users/**");
     }
 
     @Override

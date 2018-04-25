@@ -18,4 +18,11 @@ public class UserServiceImpl implements UserService {
     public UserEntity findUserByUsername(String username) {
         return userDao.findByUsername(username);
     }
+
+    @Override
+    @Transactional
+    public void insertUser(UserEntity userEntity) {
+        userEntity.setId(null);
+        userDao.insertSelective(userEntity);
+    }
 }
