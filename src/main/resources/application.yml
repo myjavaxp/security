@@ -13,6 +13,17 @@ spring:
         slf4j:
           enabled: true
       aop-patterns: com.yibo.security.dao.*
+  redis:
+    jedis:
+      pool:
+        max-active: 2000
+        max-idle: 500
+        min-idle: 50
+        max-wait: 100000ms
+    timeout: 3000ms
+    host: localhost
+    port: 6379
+    database: 0
 mybatis:
   mapper-locations: classpath:/mapper/*.xml
   type-aliases-package: com.yibo.security.entity
