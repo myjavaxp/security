@@ -42,6 +42,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .addFilter(new JWTLoginFilter(authenticationManager()))
                 .addFilter(new JWTAuthenticationFilter(authenticationManager()))
-                .logout().logoutUrl("/logout").logoutSuccessUrl("/").permitAll();
+                .logout().logoutUrl("/logout").logoutSuccessUrl("/").permitAll();//前后端分离其实后端是不用管登出的，没有登录状态
     }
 }
