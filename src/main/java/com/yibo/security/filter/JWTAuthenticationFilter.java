@@ -18,7 +18,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.util.Assert;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -82,8 +81,14 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
                         .getSubject();
                 if (user != null) {
                     Jedis jedis = jedisPool.getResource();
-                    Assert.isTrue(jedis.exists(user), "Token已过期");
-                    Assert.isTrue(jedis.get(user).equals(token.replace("Bearer ", "")), "Token信息不一致");
+                    if (!jedis.exists(user)) {
+                        jedis.close();
+                        throw new TokenException("Token已过期");
+                    }
+                    if (!jedis.get(user).equals(token.replace("Bearer ", ""))) {
+                        jedis.close();
+                        throw new TokenException("Token信息不一致");
+                    }
                     //获取用户对权限列表
                     //这块可以想办法优化一下，减少对数据库对读写
                     UserEntity userEntity = userService.findUserByUsername(user);
