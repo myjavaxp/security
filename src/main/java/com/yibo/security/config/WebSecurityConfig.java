@@ -27,8 +27,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) {
-        web.ignoring().antMatchers("/any/**")
-                .and().ignoring().antMatchers("/users/**");
+        web.ignoring().antMatchers("/any/**", "/users/**", "/logout");
     }
 
     @Override
@@ -41,7 +40,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/user/**").access("hasAnyRole('admin','user')")
                 .and()
                 .addFilter(new JWTLoginFilter(authenticationManager()))
-                .addFilter(new JWTAuthenticationFilter(authenticationManager()))
-                .logout().logoutUrl("/logout").logoutSuccessUrl("/").permitAll();//前后端分离其实后端是不用管登出的，没有登录状态
+                .addFilter(new JWTAuthenticationFilter(authenticationManager()));
     }
 }

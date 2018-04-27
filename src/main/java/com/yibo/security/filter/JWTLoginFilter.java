@@ -71,7 +71,7 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
                     .compact();
             jedis.set(username, token);
         }
-        jedis.expire(username, 2 * 60);
+        jedis.expire(username, 5 * 60);
         jedis.close();
         response.addHeader("Authorization", "Bearer " + token);
         response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
