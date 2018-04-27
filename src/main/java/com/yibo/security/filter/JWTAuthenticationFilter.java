@@ -17,6 +17,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.util.Assert;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -28,10 +31,11 @@ import java.util.List;
 import java.util.Set;
 
 public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
-    private static final Logger LOGGER=LoggerFactory.getLogger(JWTAuthenticationFilter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(JWTAuthenticationFilter.class);
     private static ResourceService resourceService;
     private static RoleService roleService;
     private static UserService userService;
+    private static JedisPool jedisPool;
 
     public static void setResourceService(ResourceService resourceService) {
         JWTAuthenticationFilter.resourceService = resourceService;
@@ -43,6 +47,10 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
 
     public static void setUserService(UserService userService) {
         JWTAuthenticationFilter.userService = userService;
+    }
+
+    public static void setJedisPool(JedisPool jedisPool) {
+        JWTAuthenticationFilter.jedisPool = jedisPool;
     }
 
     public JWTAuthenticationFilter(AuthenticationManager authenticationManager) {
@@ -72,6 +80,8 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
                         .getBody()
                         .getSubject();
                 if (user != null) {
+                    Jedis jedis = jedisPool.getResource();
+                    Assert.isTrue(jedis.exists(user), "Token已过期");
                     UserEntity userEntity = userService.findUserByUsername(user);
                     Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
                     List<Role> roles = roleService.getRoleValuesByUserId(userEntity.getId());
@@ -97,9 +107,6 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
             } catch (SignatureException e) {
                 LOGGER.error("签名失败: {} " + e);
                 throw new TokenException("签名失败");
-            } catch (IllegalArgumentException e) {
-                LOGGER.error("非法参数异常: {} " + e);
-                throw new TokenException("非法参数异常");
             }
         }
         return null;

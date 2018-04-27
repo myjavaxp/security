@@ -5,12 +5,16 @@ import com.yibo.security.constants.EncodeConstant;
 import com.yibo.security.entity.UserEntity;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
@@ -22,10 +26,17 @@ import java.util.Date;
 import static java.util.Collections.emptyList;
 
 public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JWTLoginFilter.class);
     private AuthenticationManager authenticationManager;
+
+    private static JedisPool jedisPool;
 
     public JWTLoginFilter(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
+    }
+
+    public static void setJedisPool(JedisPool jedisPool) {
+        JWTLoginFilter.jedisPool = jedisPool;
     }
 
     @Override
@@ -46,11 +57,22 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException {
-        String token = Jwts.builder()
-                .setSubject(authResult.getName())
-                .setExpiration(new Date(System.currentTimeMillis() + 60 * 1000)) //过期时间60秒
-                .signWith(SignatureAlgorithm.HS256, EncodeConstant.SIGNING_KEY)
-                .compact();
+        String username = authResult.getName();
+        Jedis jedis = jedisPool.getResource();
+        String token;
+        if (jedis.exists(username)) {
+            token = jedis.get(username);
+            LOGGER.info("用户: ->{}<- 从Redis获取token", username);
+        } else {
+            token = Jwts.builder()
+                    .setSubject(username)
+                    .setExpiration(new Date(System.currentTimeMillis() + 15 * 24 * 60 * 60 * 1000)) //过期时间15天
+                    .signWith(SignatureAlgorithm.HS256, EncodeConstant.SIGNING_KEY)
+                    .compact();
+            jedis.set(username, token);
+        }
+        jedis.expire(username, 2 * 60);
+        jedis.close();
         response.addHeader("Authorization", "Bearer " + token);
         response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
         PrintWriter writer = response.getWriter();
