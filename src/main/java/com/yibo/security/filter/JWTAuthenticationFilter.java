@@ -83,6 +83,9 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
                 if (user != null) {
                     Jedis jedis = jedisPool.getResource();
                     Assert.isTrue(jedis.exists(user), "Token已过期");
+                    Assert.isTrue(jedis.get(user).equals(token.replace("Bearer ", "")), "Token信息不一致");
+                    //获取用户对权限列表
+                    //这块可以想办法优化一下，减少对数据库对读写
                     UserEntity userEntity = userService.findUserByUsername(user);
                     Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
                     List<Role> roles = roleService.getRoleValuesByUserId(userEntity.getId());
