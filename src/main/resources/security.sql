@@ -1,7 +1,3 @@
-DROP DATABASE if exists `security`;
-create database security
-  default charset utf8;
-use security;
 -- MySQL dump 10.13  Distrib 5.7.21, for macos10.13 (x86_64)
 --
 -- Host: 127.0.0.1    Database: security
@@ -134,8 +130,8 @@ LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user`
   DISABLE KEYS */;
 INSERT INTO `user`
-VALUES (1, 'admin', '$2a$10$Pwy3h7grs1Cgp1tMi3ufaugmw/4/tsK51opjpBZmQS3.Akf0yoE9G', 'admin@yibo.com'),
-  (2, 'user', '$2a$10$Pwy3h7grs1Cgp1tMi3ufaugmw/4/tsK51opjpBZmQS3.Akf0yoE9G', 'user@yibo.com');
+VALUES (1, 'admin', 'bcb15f821479b4d5772bd0ca866c00ad5f926e3580720659cc80d39c9d09802a', 'admin@yibo.com'),
+  (2, 'user', 'bcb15f821479b4d5772bd0ca866c00ad5f926e3580720659cc80d39c9d09802a', 'user@yibo.com');
 /*!40000 ALTER TABLE `user`
   ENABLE KEYS */;
 UNLOCK TABLES;

@@ -27,7 +27,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) {
-        web.ignoring().antMatchers("/any/**", "/users/**", "/logout");
+        web.ignoring().antMatchers("/any/**", "/users/**", "/logout", "/druid/**");
     }
 
     @Override
@@ -35,7 +35,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/hello/**").hasAnyAuthority("hello")
-                .antMatchers("/druid/**").hasRole("admin")
                 .antMatchers("/admin/**").hasRole("admin")
                 .antMatchers("/user/**").access("hasAnyRole('admin','user')")
                 .and()
