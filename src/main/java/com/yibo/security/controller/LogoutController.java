@@ -27,18 +27,20 @@ public class LogoutController {
         Map<String, String> map = new HashMap<>();
         if (null != token) {
             LOGGER.info("有token登出");
+            token = token.replace(EncodeConstant.BEARER, "");
             try {
+                Jedis jedis = jedisPool.getResource();
+                String signingKey = jedis.get(token);
                 String user = Jwts.parser()
-                        .setSigningKey(EncodeConstant.SIGNING_KEY)
-                        .parseClaimsJws(token.replace("Bearer ", ""))
+                        .setSigningKey(signingKey)
+                        .parseClaimsJws(token)
                         .getBody()
                         .getSubject();
-                Jedis jedis = jedisPool.getResource();
                 if (jedis.exists(user)) {
                     LOGGER.info("删除Redis登录信息");
                     jedis.del(user);
+                    jedis.del(token);
                 }
-                jedis.close();
             } catch (Exception e) {
                 LOGGER.info("Token信息有误");
                 e.printStackTrace();

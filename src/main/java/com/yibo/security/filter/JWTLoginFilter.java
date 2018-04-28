@@ -5,6 +5,7 @@ import com.yibo.security.constants.EncodeConstant;
 import com.yibo.security.entity.UserEntity;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.lang.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -61,25 +62,47 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
         String username = authResult.getName();
         Jedis jedis = jedisPool.getResource();
         String token;
+        String signingKey;
         if (jedis.exists(username)) {
             token = jedis.get(username);
-            LOGGER.info("用户: ->{}<- 从Redis获取token", username);
+            signingKey = jedis.get(token);
+            try {
+                String user = Jwts.parser()
+                        .setSigningKey(signingKey)
+                        .parseClaimsJws(token)
+                        .getBody()
+                        .getSubject();
+                Assert.isTrue(username.equals(user), "Token解析用户名不一致");
+                LOGGER.info("用户: ->{}<- 从Redis获取token", username);
+            } catch (Exception e) {
+                e.printStackTrace();//这个时候证明Redis中存储的Token有问题（过期或者被人篡改），所以需要重新设置
+                jedis.del(token);
+                token = getToken(username, jedis);
+            }
         } else {
-            token = Jwts.builder()
-                    .setSubject(username)
-                    .setExpiration(new Date(System.currentTimeMillis() + 15 * 24 * 60 * 60 * 1000)) //过期时间15天
-                    .signWith(SignatureAlgorithm.HS256, EncodeConstant.SIGNING_KEY)
-                    .compact();
-            jedis.set(username, token);
+            token = getToken(username, jedis);
         }
-        jedis.expire(username, 5 * 60);
+        jedis.expire(username, EncodeConstant.TOKEN_REDIS_EXPIRATION);
+        jedis.expire(token, EncodeConstant.TOKEN_REDIS_EXPIRATION);
         jedis.close();
-        response.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
+        response.addHeader(HttpHeaders.AUTHORIZATION, EncodeConstant.BEARER + token);
         response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
         PrintWriter writer = response.getWriter();
         String successContent = "{\"status\":\"success\",\"message\":" + "\"这里放前台需要的权限列表\"" + "}";
         writer.write(successContent);
         writer.flush();
         writer.close();
+    }
+
+    private String getToken(String username, Jedis jedis) {
+        String signingKey = username + System.currentTimeMillis();
+        String token = Jwts.builder()
+                .setSubject(username)
+                .setExpiration(new Date(System.currentTimeMillis() + EncodeConstant.TOKEN_EXPIRATION)) //过期时间15天
+                .signWith(SignatureAlgorithm.HS256, signingKey)
+                .compact();
+        jedis.set(username, token);
+        jedis.set(token, signingKey);
+        return token;
     }
 }

@@ -60,7 +60,7 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         String token = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (token == null || !token.startsWith("Bearer ")) {
+        if (token == null || !token.startsWith(EncodeConstant.BEARER)) {
             chain.doFilter(request, response);
             return;
         }
@@ -72,23 +72,28 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
         String token = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (token != null) {
+            token = token.replace(EncodeConstant.BEARER, "");
             // parse the token.
-            try {
+            try (Jedis jedis = jedisPool.getResource()) {
+                String signingKey = jedis.get(token);
+                if (null == signingKey) {
+                    throw new TokenException("Token已过期");
+                }
                 String user = Jwts.parser()
-                        .setSigningKey(EncodeConstant.SIGNING_KEY)
-                        .parseClaimsJws(token.replace("Bearer ", ""))
+                        .setSigningKey(signingKey)
+                        .parseClaimsJws(token)
                         .getBody()
                         .getSubject();
+                LOGGER.info("用户名:{}", user);
                 if (user != null) {
-                    Jedis jedis = jedisPool.getResource();
                     if (!jedis.exists(user)) {
-                        jedis.close();
                         throw new TokenException("Token已过期");
                     }
-                    if (!jedis.get(user).equals(token.replace("Bearer ", ""))) {
-                        jedis.close();
+                    if (!jedis.get(user).equals(token)) {
                         throw new TokenException("Token信息不一致");
                     }
+                    jedis.expire(user, EncodeConstant.TOKEN_REDIS_EXPIRATION);
+                    jedis.expire(token, EncodeConstant.TOKEN_REDIS_EXPIRATION);
                     //获取用户对权限列表
                     //这块可以想办法优化一下，减少对数据库对读写
                     UserEntity userEntity = userService.findUserByUsername(user);

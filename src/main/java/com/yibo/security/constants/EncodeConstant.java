@@ -1,5 +1,7 @@
 package com.yibo.security.constants;
 
 public class EncodeConstant {
-    public static final String SIGNING_KEY="welcome";
+    public static final String BEARER = "Bearer ";
+    public static final int TOKEN_REDIS_EXPIRATION = 30 * 60;
+    public static final long TOKEN_EXPIRATION = 15 * 24 * 60 * 60 * 1000L;
 }
