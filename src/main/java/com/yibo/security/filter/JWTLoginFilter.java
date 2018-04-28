@@ -1,7 +1,7 @@
 package com.yibo.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yibo.security.constants.EncodeConstant;
+import com.yibo.security.constants.TokenConstant;
 import com.yibo.security.entity.UserEntity;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -82,10 +82,10 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
         } else {
             token = getToken(username, jedis);
         }
-        jedis.expire(username, EncodeConstant.TOKEN_REDIS_EXPIRATION);
-        jedis.expire(token, EncodeConstant.TOKEN_REDIS_EXPIRATION);
+        jedis.expire(username, TokenConstant.TOKEN_REDIS_EXPIRATION);
+        jedis.expire(token, TokenConstant.TOKEN_REDIS_EXPIRATION);
         jedis.close();
-        response.addHeader(HttpHeaders.AUTHORIZATION, EncodeConstant.BEARER + token);
+        response.addHeader(HttpHeaders.AUTHORIZATION, TokenConstant.BEARER + token);
         response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
         PrintWriter writer = response.getWriter();
         String successContent = "{\"status\":\"success\",\"message\":" + "\"这里放前台需要的权限列表\"" + "}";
@@ -98,7 +98,7 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
         String signingKey = username + System.currentTimeMillis();
         String token = Jwts.builder()
                 .setSubject(username)
-                .setExpiration(new Date(System.currentTimeMillis() + EncodeConstant.TOKEN_EXPIRATION)) //过期时间15天
+                .setExpiration(new Date(System.currentTimeMillis() + TokenConstant.TOKEN_EXPIRATION)) //过期时间15天
                 .signWith(SignatureAlgorithm.HS256, signingKey)
                 .compact();
         jedis.set(username, token);

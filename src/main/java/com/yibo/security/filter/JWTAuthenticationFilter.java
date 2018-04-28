@@ -1,6 +1,6 @@
 package com.yibo.security.filter;
 
-import com.yibo.security.constants.EncodeConstant;
+import com.yibo.security.constants.TokenConstant;
 import com.yibo.security.entity.Resource;
 import com.yibo.security.entity.Role;
 import com.yibo.security.entity.UserEntity;
@@ -60,7 +60,7 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
         String token = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (token == null || !token.startsWith(EncodeConstant.BEARER)) {
+        if (token == null || !token.startsWith(TokenConstant.BEARER)) {
             chain.doFilter(request, response);
             return;
         }
@@ -72,7 +72,7 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
         String token = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (token != null) {
-            token = token.replace(EncodeConstant.BEARER, "");
+            token = token.replace(TokenConstant.BEARER, "");
             // parse the token.
             try (Jedis jedis = jedisPool.getResource()) {
                 String signingKey = jedis.get(token);
@@ -92,8 +92,8 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
                     if (!jedis.get(user).equals(token)) {
                         throw new TokenException("Token信息不一致");
                     }
-                    jedis.expire(user, EncodeConstant.TOKEN_REDIS_EXPIRATION);
-                    jedis.expire(token, EncodeConstant.TOKEN_REDIS_EXPIRATION);
+                    jedis.expire(user, TokenConstant.TOKEN_REDIS_EXPIRATION);
+                    jedis.expire(token, TokenConstant.TOKEN_REDIS_EXPIRATION);
                     //获取用户对权限列表
                     //这块可以想办法优化一下，减少对数据库对读写
                     UserEntity userEntity = userService.findUserByUsername(user);

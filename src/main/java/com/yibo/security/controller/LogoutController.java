@@ -1,6 +1,6 @@
 package com.yibo.security.controller;
 
-import com.yibo.security.constants.EncodeConstant;
+import com.yibo.security.constants.TokenConstant;
 import io.jsonwebtoken.Jwts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +27,7 @@ public class LogoutController {
         Map<String, String> map = new HashMap<>();
         if (null != token) {
             LOGGER.info("有token登出");
-            token = token.replace(EncodeConstant.BEARER, "");
+            token = token.replace(TokenConstant.BEARER, "");
             try {
                 Jedis jedis = jedisPool.getResource();
                 String signingKey = jedis.get(token);
