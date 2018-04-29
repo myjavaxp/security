@@ -9,7 +9,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 
@@ -21,7 +20,6 @@ public class JWTAuthenticationProvider implements AuthenticationProvider {
     private UserDetailsServiceImpl userDetailsServiceImpl;
 
     @Override
-    @Transactional(readOnly = true)
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String name = authentication.getName();
         String password = authentication.getCredentials().toString();
