@@ -27,7 +27,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     public void configure(WebSecurity web) {
-        web.ignoring().antMatchers("/any/**", "/users/**", "/logout", "/druid/**");
+        web.ignoring().antMatchers("/any/**", "/users/**", "/logout");
     }
 
     @Override
