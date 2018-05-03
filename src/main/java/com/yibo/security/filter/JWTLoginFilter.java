@@ -1,18 +1,14 @@
 package com.yibo.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.yibo.security.constants.TokenConstant;
 import com.yibo.security.entity.UserAuthorization;
 import com.yibo.security.entity.UserEntity;
 import com.yibo.security.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.lang.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,7 +24,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
 
+import static com.yibo.security.constants.TokenConstant.*;
+import static io.jsonwebtoken.SignatureAlgorithm.HS256;
 import static java.util.Collections.emptyList;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE;
 
 public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
     private static final Logger LOGGER = LoggerFactory.getLogger(JWTLoginFilter.class);
@@ -90,11 +90,11 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
         } else {
             token = getToken(username, jedis);
         }
-        jedis.expire(username, TokenConstant.TOKEN_REDIS_EXPIRATION);
-        jedis.expire(token, TokenConstant.TOKEN_REDIS_EXPIRATION);
+        jedis.expire(username, TOKEN_REDIS_EXPIRATION);
+        jedis.expire(token, TOKEN_REDIS_EXPIRATION);
         jedis.close();
-        response.addHeader(HttpHeaders.AUTHORIZATION, TokenConstant.BEARER + token);
-        response.setContentType(MediaType.APPLICATION_JSON_UTF8_VALUE);
+        response.addHeader(AUTHORIZATION, BEARER + token);
+        response.setContentType(APPLICATION_JSON_UTF8_VALUE);
         PrintWriter writer = response.getWriter();
         String successContent = "{\"status\":\"success\",\"message\":" + "\"这里放前台需要的权限列表\"" + "}";
         writer.write(successContent);
@@ -110,8 +110,8 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
         claims.put("resourceList", authorization.getResourceList());
         String token = Jwts.builder()
                 .setClaims(claims)
-                .setExpiration(new Date(System.currentTimeMillis() + TokenConstant.TOKEN_EXPIRATION)) //过期时间15天
-                .signWith(SignatureAlgorithm.HS256, signingKey)
+                .setExpiration(new Date(System.currentTimeMillis() + TOKEN_EXPIRATION)) //过期时间15天
+                .signWith(HS256, signingKey)
                 .compact();
         jedis.set(username, token);
         jedis.set(token, signingKey);

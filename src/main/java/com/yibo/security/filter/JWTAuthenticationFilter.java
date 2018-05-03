@@ -1,11 +1,9 @@
 package com.yibo.security.filter;
 
-import com.yibo.security.constants.TokenConstant;
 import com.yibo.security.exception.TokenException;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,6 +22,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import static com.yibo.security.constants.TokenConstant.*;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
+
 public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
     private static final Logger LOGGER = LoggerFactory.getLogger(JWTAuthenticationFilter.class);
     private static JedisPool jedisPool;
@@ -38,8 +39,8 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-        String token = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (token == null || !token.startsWith(TokenConstant.BEARER)) {
+        String token = request.getHeader(AUTHORIZATION);
+        if (token == null || !token.startsWith(BEARER)) {
             chain.doFilter(request, response);
             return;
         }
@@ -48,10 +49,11 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
         chain.doFilter(request, response);
     }
 
+    @SuppressWarnings({"unchecked"})
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request) {
-        String token = request.getHeader(HttpHeaders.AUTHORIZATION);
+        String token = request.getHeader(AUTHORIZATION);
         if (token != null) {
-            token = token.replace(TokenConstant.BEARER, "");
+            token = token.replace(BEARER, "");
             // parse the token.
             try (Jedis jedis = jedisPool.getResource()) {
                 String signingKey = jedis.get(token);
@@ -71,23 +73,12 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
                     if (!jedis.get(user).equals(token)) {
                         throw new TokenException("Token信息不一致");
                     }
-                    jedis.expire(user, TokenConstant.TOKEN_REDIS_EXPIRATION);
-                    jedis.expire(token, TokenConstant.TOKEN_REDIS_EXPIRATION);
+                    jedis.expire(user, TOKEN_REDIS_EXPIRATION);
+                    jedis.expire(token, TOKEN_REDIS_EXPIRATION);
                     //获取用户对权限列表
-                    //这块可以想办法优化一下，减少对数据库对读写
-                    List<String> roleList = (List<String>) claims.get("roleList");
-                    List<String> resourceList = (List<String>) claims.get("resourceList");
-                    //UserEntity userEntity = userService.findUserByUsername(user);
+                    List<String> roleList = (List<String>) claims.get(ROLE_LIST);
+                    List<String> resourceList = (List<String>) claims.get(RESOURCE_LIST);
                     Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
-                    //List<Role> roles = roleService.getRoleValuesByUserId(userEntity.getId());
-                    /*for (Role role : roles) {
-                        GrantedAuthority grantedAuthority = new SimpleGrantedAuthority("ROLE_" + role.getName());
-                        grantedAuthorities.add(grantedAuthority);
-                        List<Resource> resources = resourceService.getPermissionsByRoleId(role.getId());
-                        for (Resource resource : resources) {
-                            grantedAuthorities.add(new SimpleGrantedAuthority(resource.getUrl()));
-                        }
-                    }*/
                     for (String role : roleList) {
                         grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_" + role));
                     }
