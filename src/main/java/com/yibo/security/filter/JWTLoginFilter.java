@@ -106,8 +106,8 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
         String signingKey = username + System.currentTimeMillis();
         UserAuthorization authorization = userService.getUserAuthorization(username);
         Claims claims = Jwts.claims().setSubject(username);
-        claims.put("roleList", authorization.getRoleList());
-        claims.put("resourceList", authorization.getResourceList());
+        claims.put(ROLE_LIST, authorization.getRoleList());
+        claims.put(RESOURCE_LIST, authorization.getResourceList());
         String token = Jwts.builder()
                 .setClaims(claims)
                 .setExpiration(new Date(System.currentTimeMillis() + TOKEN_EXPIRATION)) //过期时间15天
