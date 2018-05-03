@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yibo.security.entity.UserAuthorization;
 import com.yibo.security.entity.UserEntity;
 import com.yibo.security.service.UserService;
+import com.yibo.security.utils.JSONUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.lang.Assert;
@@ -23,6 +24,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 
 import static com.yibo.security.constants.TokenConstant.*;
 import static io.jsonwebtoken.SignatureAlgorithm.HS256;
@@ -66,29 +69,36 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
     }
 
     @Override
+    @SuppressWarnings({"unchecked"})
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException {
         String username = authResult.getName();
         Jedis jedis = jedisPool.getResource();
         String token;
         String signingKey;
+        UserAuthorization authorization;
         if (jedis.exists(username)) {
             token = jedis.get(username);
             signingKey = jedis.get(token);
             try {
-                String user = Jwts.parser()
+                Claims claims = Jwts.parser()
                         .setSigningKey(signingKey)
                         .parseClaimsJws(token)
-                        .getBody()
-                        .getSubject();
+                        .getBody();
+                String user = claims.getSubject();
                 Assert.isTrue(username.equals(user), "Token解析用户名不一致");
+                List<String> roleList = (List<String>) claims.get(ROLE_LIST);
+                List<String> resourceList = (List<String>) claims.get(RESOURCE_LIST);
+                authorization = new UserAuthorization(username, new HashSet<>(roleList), new HashSet<>(resourceList));
                 LOGGER.info("用户: ->{}<- 从Redis获取token", username);
             } catch (Exception e) {
                 e.printStackTrace();//这个时候证明Redis中存储的Token有问题（过期或者被人篡改），所以需要重新设置
                 jedis.del(token);
-                token = getToken(username, jedis);
+                authorization = userService.getUserAuthorization(username);
+                token = getToken(username, jedis, authorization);
             }
         } else {
-            token = getToken(username, jedis);
+            authorization = userService.getUserAuthorization(username);
+            token = getToken(username, jedis, authorization);
         }
         jedis.expire(username, TOKEN_REDIS_EXPIRATION);
         jedis.expire(token, TOKEN_REDIS_EXPIRATION);
@@ -96,15 +106,14 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
         response.addHeader(AUTHORIZATION, BEARER + token);
         response.setContentType(APPLICATION_JSON_UTF8_VALUE);
         PrintWriter writer = response.getWriter();
-        String successContent = "{\"status\":\"success\",\"message\":" + "\"这里放前台需要的权限列表\"" + "}";
+        String successContent = "{\"status\":\"success\",\"message\":" + JSONUtil.toJson(authorization) + "}";
         writer.write(successContent);
         writer.flush();
         writer.close();
     }
 
-    private String getToken(String username, Jedis jedis) {
+    private String getToken(String username, Jedis jedis, UserAuthorization authorization) {
         String signingKey = username + System.currentTimeMillis();
-        UserAuthorization authorization = userService.getUserAuthorization(username);
         Claims claims = Jwts.claims().setSubject(username);
         claims.put(ROLE_LIST, authorization.getRoleList());
         claims.put(RESOURCE_LIST, authorization.getResourceList());
