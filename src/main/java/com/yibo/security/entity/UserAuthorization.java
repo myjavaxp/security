@@ -9,6 +9,15 @@ public class UserAuthorization implements Serializable {
     private Set<String> roleList;
     private Set<String> resourceList;
 
+    public UserAuthorization() {
+    }
+
+    public UserAuthorization(String username, Set<String> roleList, Set<String> resourceList) {
+        this.username = username;
+        this.roleList = roleList;
+        this.resourceList = resourceList;
+    }
+
     public String getUsername() {
         return username;
     }

@@ -50,7 +50,6 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional(readOnly = true)
     public UserAuthorization getUserAuthorization(String username) {
-        UserAuthorization userAuthorization = new UserAuthorization();
         UserEntity userEntity = userDao.findByUsername(username);
         List<Role> roleList = roleService.getRoleValuesByUserId(userEntity.getId());
         List<Resource> resourceList = roleResourceDao.getResourcesByRoles(roleList);
@@ -58,9 +57,6 @@ public class UserServiceImpl implements UserService {
         Set<String> roles = new HashSet<>();
         roleList.forEach(role -> roles.add(role.getName()));
         resourceList.forEach(resource -> resources.add(resource.getUrl()));
-        userAuthorization.setUsername(username);
-        userAuthorization.setRoleList(roles);
-        userAuthorization.setResourceList(resources);
-        return userAuthorization;
+        return new UserAuthorization(username, roles, resources);
     }
 }
