@@ -28,8 +28,7 @@ public class LogoutController {
         if (null != token) {
             LOGGER.info("有token登出");
             token = token.replace(TokenConstant.BEARER, "");
-            try {
-                Jedis jedis = jedisPool.getResource();
+            try (Jedis jedis = jedisPool.getResource()) {
                 String signingKey = jedis.get(token);
                 String user = Jwts.parser()
                         .setSigningKey(signingKey)
