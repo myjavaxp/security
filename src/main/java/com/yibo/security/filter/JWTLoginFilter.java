@@ -2,7 +2,10 @@ package com.yibo.security.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yibo.security.constants.TokenConstant;
+import com.yibo.security.entity.UserAuthorization;
 import com.yibo.security.entity.UserEntity;
+import com.yibo.security.service.UserService;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.lang.Assert;
@@ -32,6 +35,7 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
     private AuthenticationManager authenticationManager;
 
     private static JedisPool jedisPool;
+    private static UserService userService;
 
     public JWTLoginFilter(AuthenticationManager authenticationManager) {
         this.authenticationManager = authenticationManager;
@@ -39,6 +43,10 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
 
     public static void setJedisPool(JedisPool jedisPool) {
         JWTLoginFilter.jedisPool = jedisPool;
+    }
+
+    public static void setUserService(UserService userService) {
+        JWTLoginFilter.userService = userService;
     }
 
     @Override
@@ -96,8 +104,12 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
 
     private String getToken(String username, Jedis jedis) {
         String signingKey = username + System.currentTimeMillis();
+        UserAuthorization authorization = userService.getUserAuthorization(username);
+        Claims claims = Jwts.claims().setSubject(username);
+        claims.put("roleList", authorization.getRoleList());
+        claims.put("resourceList", authorization.getResourceList());
         String token = Jwts.builder()
-                .setSubject(username)
+                .setClaims(claims)
                 .setExpiration(new Date(System.currentTimeMillis() + TokenConstant.TOKEN_EXPIRATION)) //过期时间15天
                 .signWith(SignatureAlgorithm.HS256, signingKey)
                 .compact();

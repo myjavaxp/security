@@ -1,13 +1,7 @@
 package com.yibo.security.filter;
 
 import com.yibo.security.constants.TokenConstant;
-import com.yibo.security.entity.Resource;
-import com.yibo.security.entity.Role;
-import com.yibo.security.entity.UserEntity;
 import com.yibo.security.exception.TokenException;
-import com.yibo.security.service.ResourceService;
-import com.yibo.security.service.RoleService;
-import com.yibo.security.service.UserService;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,22 +26,7 @@ import java.util.Set;
 
 public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
     private static final Logger LOGGER = LoggerFactory.getLogger(JWTAuthenticationFilter.class);
-    private static ResourceService resourceService;
-    private static RoleService roleService;
-    private static UserService userService;
     private static JedisPool jedisPool;
-
-    public static void setResourceService(ResourceService resourceService) {
-        JWTAuthenticationFilter.resourceService = resourceService;
-    }
-
-    public static void setRoleService(RoleService roleService) {
-        JWTAuthenticationFilter.roleService = roleService;
-    }
-
-    public static void setUserService(UserService userService) {
-        JWTAuthenticationFilter.userService = userService;
-    }
 
     public static void setJedisPool(JedisPool jedisPool) {
         JWTAuthenticationFilter.jedisPool = jedisPool;
@@ -79,11 +58,11 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
                 if (null == signingKey) {
                     throw new TokenException("Token已过期");
                 }
-                String user = Jwts.parser()
+                Claims claims = Jwts.parser()
                         .setSigningKey(signingKey)
                         .parseClaimsJws(token)
-                        .getBody()
-                        .getSubject();
+                        .getBody();
+                String user = claims.getSubject();
                 LOGGER.info("用户名:{}", user);
                 if (user != null) {
                     if (!jedis.exists(user)) {
@@ -96,18 +75,26 @@ public class JWTAuthenticationFilter extends BasicAuthenticationFilter {
                     jedis.expire(token, TokenConstant.TOKEN_REDIS_EXPIRATION);
                     //获取用户对权限列表
                     //这块可以想办法优化一下，减少对数据库对读写
-                    UserEntity userEntity = userService.findUserByUsername(user);
+                    List<String> roleList = (List<String>) claims.get("roleList");
+                    List<String> resourceList = (List<String>) claims.get("resourceList");
+                    //UserEntity userEntity = userService.findUserByUsername(user);
                     Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
-                    List<Role> roles = roleService.getRoleValuesByUserId(userEntity.getId());
-                    for (Role role : roles) {
+                    //List<Role> roles = roleService.getRoleValuesByUserId(userEntity.getId());
+                    /*for (Role role : roles) {
                         GrantedAuthority grantedAuthority = new SimpleGrantedAuthority("ROLE_" + role.getName());
                         grantedAuthorities.add(grantedAuthority);
                         List<Resource> resources = resourceService.getPermissionsByRoleId(role.getId());
                         for (Resource resource : resources) {
                             grantedAuthorities.add(new SimpleGrantedAuthority(resource.getUrl()));
                         }
+                    }*/
+                    for (String role : roleList) {
+                        grantedAuthorities.add(new SimpleGrantedAuthority("ROLE_" + role));
                     }
-                    return new UsernamePasswordAuthenticationToken(userEntity.getUsername(), userEntity.getPassword(), grantedAuthorities);
+                    for (String resource : resourceList) {
+                        grantedAuthorities.add(new SimpleGrantedAuthority(resource));
+                    }
+                    return new UsernamePasswordAuthenticationToken(user, null, grantedAuthorities);
                 }
             } catch (ExpiredJwtException e) {
                 LOGGER.error("Token已过期: {} " + e);
