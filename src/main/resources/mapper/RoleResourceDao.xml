@@ -73,4 +73,12 @@
         from role_resource rr left join resource r on rr.resource_id = r.id
         where rr.role_id = #{roleId,jdbcType=BIGINT}
     </select>
+    <select id="getResourcesByRoles" parameterType="java.util.List" resultType="Resource">
+        select r.*
+        from role_resource rr left join resource r on rr.resource_id = r.id
+        where rr.role_id IN
+        <foreach collection="collection" index="index" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </select>
 </mapper>

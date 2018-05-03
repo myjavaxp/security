@@ -1,6 +1,7 @@
 package com.yibo.security.dao;
 
 import com.yibo.security.entity.Resource;
+import com.yibo.security.entity.Role;
 import com.yibo.security.entity.RoleResource;
 
 import java.util.List;
@@ -19,4 +20,6 @@ public interface RoleResourceDao {
     int updateByPrimaryKey(RoleResource record);
 
     List<Resource> getPermissionsByRoleId(Long roleId);
+
+    List<Resource> getResourcesByRoles(List<Role> roles);
 }
