@@ -1,5 +1,6 @@
 package com.yibo.security.controller;
 
+import com.yibo.security.aop.LoggerManager;
 import com.yibo.security.constants.TokenConstant;
 import io.jsonwebtoken.Jwts;
 import org.slf4j.Logger;
@@ -22,6 +23,7 @@ public class LogoutController {
     private JedisPool jedisPool;
 
     @GetMapping("/logout")
+    @LoggerManager(description = "用户登出")
     public Map<String, String> logout(HttpServletRequest request) {
         String token = request.getHeader(HttpHeaders.AUTHORIZATION);
         Map<String, String> map = new HashMap<>();

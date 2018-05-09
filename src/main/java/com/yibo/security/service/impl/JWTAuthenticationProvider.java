@@ -1,5 +1,6 @@
 package com.yibo.security.service.impl;
 
+import com.yibo.security.aop.LoggerManager;
 import com.yibo.security.utils.SHA256Util;
 import io.jsonwebtoken.lang.Assert;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -20,6 +21,7 @@ public class JWTAuthenticationProvider implements AuthenticationProvider {
     private UserDetailsServiceImpl userDetailsServiceImpl;
 
     @Override
+    @LoggerManager(description = "登录密码验证")
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String name = authentication.getName();
         String password = authentication.getCredentials().toString();
