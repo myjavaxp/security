@@ -1,6 +1,7 @@
 package com.yibo.security.aop;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.apache.commons.lang3.builder.ToStringStyle;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
@@ -38,7 +39,7 @@ public class LoggerAdvice {
         }
         StringBuilder param = new StringBuilder();
         for (Object obj : params) {
-            param.append(ToStringBuilder.reflectionToString(obj)).append("  ");
+            param.append(ToStringBuilder.reflectionToString(obj, ToStringStyle.SHORT_PREFIX_STYLE)).append(" ");
         }
         return param.toString();
     }
