@@ -25,6 +25,7 @@ public class DaoTest {
     public void test01() {
         SysUser user = userDao.findUserDetailsByUserId(1L);
         System.out.println(user);
+        System.out.println(userDao.findUserDetailsByUserId(1L));
     }
 
     @Test
@@ -44,5 +45,12 @@ public class DaoTest {
         userEntityList.add(new UserEntity(null, "test04", "123456", "test@qq.com"));
         int i = userDao.insertUsers(userEntityList);
         System.out.println(i);
+    }
+
+    @Test
+    public void test04() {
+        UserEntity user1 = userDao.selectByPrimaryKey(1L);
+        UserEntity user2 = userDao.selectByPrimaryKey(1L);
+        System.out.println(user1==user2);
     }
 }
