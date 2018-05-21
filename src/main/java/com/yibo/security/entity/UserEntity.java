@@ -13,6 +13,16 @@ public class UserEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    public UserEntity() {
+    }
+
+    public UserEntity(Long id, String username, String password, String email) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.email = email;
+    }
+
     public Long getId() {
         return id;
     }

@@ -98,4 +98,14 @@
         <include refid="Base_Column_List"/>
         FROM user where id =#{userId}
     </select>
+    <insert id="insertUsers" parameterType="java.util.List">
+        insert into user
+        (username, password, email)
+        values
+        <foreach collection="users" separator="," item="userEntity">
+            (#{userEntity.username},
+            #{userEntity.password},
+            #{userEntity.email})
+        </foreach>
+    </insert>
 </mapper>
