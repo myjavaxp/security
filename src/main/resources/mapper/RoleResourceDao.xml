@@ -77,7 +77,7 @@
         select r.*
         from role_resource rr left join resource r on rr.resource_id = r.id
         where rr.role_id IN
-        <foreach collection="collection" index="index" item="item" open="(" separator="," close=")">
+        <foreach collection="collection" item="item" open="(" separator="," close=")">
             #{item.id}
         </foreach>
     </select>
