@@ -1,5 +1,6 @@
 package com.yibo.security.dao;
 
+import com.yibo.security.entity.SysUser;
 import com.yibo.security.entity.UserEntity;
 
 public interface UserDao {
@@ -16,4 +17,6 @@ public interface UserDao {
     int updateByPrimaryKey(UserEntity record);
 
     UserEntity findByUsername(String username);
+
+    SysUser findUserDetailsByUserId(Long userId);
 }

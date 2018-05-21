@@ -85,4 +85,17 @@
         from user
         where username = #{username,jdbcType=VARCHAR}
     </select>
+    <resultMap id="userDetails" type="sysUser">
+        <id property="id" column="id"/>
+        <result property="email" column="email"/>
+        <result property="password" column="password"/>
+        <result property="username" column="username"/>
+        <collection property="resources" select="com.yibo.security.dao.UserRoleDao.getResourcesByUserId" column="id"/>
+        <collection property="roles" select="com.yibo.security.dao.UserRoleDao.getRoleValuesByUserId" column="id"/>
+    </resultMap>
+    <select id="findUserDetailsByUserId" parameterType="Long" resultMap="userDetails">
+        select
+        <include refid="Base_Column_List"/>
+        FROM user where id =#{userId}
+    </select>
 </mapper>
