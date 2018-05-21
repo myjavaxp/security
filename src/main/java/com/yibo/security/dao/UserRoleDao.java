@@ -23,4 +23,6 @@ public interface UserRoleDao {
     List<Role> getRoleValuesByUserId(Long userId);
 
     Set<Resource> getResourcesByUserId(Long userId);
+
+    Set<Resource> getResourcesByRoleIds(List<Long> roleIds);
 }
