@@ -3,6 +3,7 @@ package com.yibo.security.utils;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.UUID;
 
 public class SHA256Util {
     public static String getSHA256(String string) {
@@ -29,5 +30,9 @@ public class SHA256Util {
             stringBuilder.append(temp);
         }
         return stringBuilder.toString();
+    }
+
+    public static String getUUID() {
+        return UUID.randomUUID().toString().replace("-", "").toLowerCase();
     }
 }
