@@ -3,6 +3,7 @@ package com.yibo.security.dao;
 import com.yibo.security.entity.Resource;
 import com.yibo.security.entity.Role;
 import com.yibo.security.entity.RoleResource;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -21,5 +22,5 @@ public interface RoleResourceDao {
 
     List<Resource> getPermissionsByRoleId(Long roleId);
 
-    List<Resource> getResourcesByRoles(List<Role> roles);
+    List<Resource> getResourcesByRoles(@Param("roles") List<Role> roles);
 }
