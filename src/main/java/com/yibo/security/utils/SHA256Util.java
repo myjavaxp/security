@@ -1,6 +1,6 @@
 package com.yibo.security.utils;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.UUID;
@@ -11,9 +11,9 @@ public class SHA256Util {
         String encodeString = "";
         try {
             messageDigest = MessageDigest.getInstance("SHA-256");
-            messageDigest.update(string.getBytes("UTF-8"));
+            messageDigest.update(string.getBytes(StandardCharsets.UTF_8));
             encodeString = byte2Hex(messageDigest.digest());
-        } catch (NoSuchAlgorithmException | UnsupportedEncodingException e) {
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
         return encodeString;
