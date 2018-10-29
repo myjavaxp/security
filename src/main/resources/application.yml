@@ -15,7 +15,7 @@ spring:
       auto-commit: true
       connection-test-query: SELECT 1
   redis:
-    jedis:
+    lettuce:
       pool:
         max-active: 2000
         max-idle: 500

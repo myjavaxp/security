@@ -5,11 +5,11 @@ import com.yibo.security.constants.TokenConstant;
 import io.jsonwebtoken.Jwts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -20,7 +20,7 @@ import java.util.Map;
 public class LogoutController {
     private static final Logger LOGGER = LoggerFactory.getLogger(LogoutController.class);
     @Resource
-    private JedisPool jedisPool;
+    private StringRedisTemplate stringRedisTemplate;
 
     @GetMapping("/logout")
     @LoggerManager(description = "用户登出")
@@ -30,17 +30,19 @@ public class LogoutController {
         if (null != token) {
             LOGGER.info("有token登出");
             token = token.replace(TokenConstant.BEARER, "");
-            try (Jedis jedis = jedisPool.getResource()) {
-                String signingKey = jedis.get(token);
+            try {
+                ValueOperations<String, String> ops = stringRedisTemplate.opsForValue();
+                String signingKey = ops.get(token);
                 String user = Jwts.parser()
                         .setSigningKey(signingKey)
                         .parseClaimsJws(token)
                         .getBody()
                         .getSubject();
-                if (jedis.exists(user)) {
+                Boolean flag = stringRedisTemplate.hasKey(user);
+                if (flag != null && flag) {
                     LOGGER.info("删除Redis登录信息");
-                    jedis.del(user);
-                    jedis.del(token);
+                    stringRedisTemplate.delete(user);
+                    stringRedisTemplate.delete(token);
                 }
             } catch (Exception e) {
                 LOGGER.info("Token信息有误");

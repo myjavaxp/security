@@ -5,18 +5,18 @@ import com.yibo.security.filter.JWTLoginFilter;
 import com.yibo.security.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import redis.clients.jedis.JedisPool;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 @Configuration
 public class JWTConfig {
     @Autowired
-    public void setJWTAuthenticationFilterJedisPool(JedisPool jedisPool) {
-        JWTAuthenticationFilter.setJedisPool(jedisPool);
+    public void setJWTAuthenticationFilterRedis(StringRedisTemplate stringRedisTemplate) {
+        JWTAuthenticationFilter.setRedisTemplate(stringRedisTemplate);
     }
 
     @Autowired
-    public void setJedisPool(JedisPool jedisPool) {
-        JWTLoginFilter.setJedisPool(jedisPool);
+    public void setRedisTemplate(StringRedisTemplate stringRedisTemplate) {
+        JWTLoginFilter.setRedisTemplate(stringRedisTemplate);
     }
 
     @Autowired
