@@ -1,10 +1,9 @@
 package com.yibo.security.entity;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+import java.util.StringJoiner;
 
 public class SysUser implements Serializable {
     private static final long serialVersionUID = -8867794869188232235L;
@@ -65,13 +64,13 @@ public class SysUser implements Serializable {
 
     @Override
     public String toString() {
-        return new ToStringBuilder(this)
-                .append("id", id)
-                .append("username", username)
-                .append("password", password)
-                .append("email", email)
-                .append("roles", roles)
-                .append("resources", resources)
+        return new StringJoiner(", ", SysUser.class.getSimpleName() + "[", "]")
+                .add("id=" + id)
+                .add("username='" + username + "'")
+                .add("password='" + password + "'")
+                .add("email='" + email + "'")
+                .add("roles=" + roles)
+                .add("resources=" + resources)
                 .toString();
     }
 }

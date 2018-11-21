@@ -1,10 +1,10 @@
 package com.yibo.security.filter;
 
+import com.alibaba.fastjson.JSON;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yibo.security.entity.UserAuthorization;
 import com.yibo.security.entity.UserEntity;
 import com.yibo.security.service.UserService;
-import com.yibo.security.utils.JSONUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.lang.Assert;
@@ -105,7 +105,7 @@ public class JWTLoginFilter extends UsernamePasswordAuthenticationFilter {
         response.addHeader(AUTHORIZATION, BEARER + token);
         response.setContentType(APPLICATION_JSON_UTF8_VALUE);
         PrintWriter writer = response.getWriter();
-        String successContent = "{\"status\":\"success\",\"message\":" + JSONUtil.toJson(authorization) + "}";
+        String successContent = "{\"status\":\"success\",\"message\":" + JSON.toJSONString(authorization) + "}";
         writer.write(successContent);
         writer.flush();
         writer.close();

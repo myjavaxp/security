@@ -37,3 +37,12 @@ mybatis:
 logging:
   level:
     com.yibo.security.dao: debug
+management:
+  endpoints:
+    web:
+      cors:
+        allow-credentials: true
+        allowed-methods: -*
+        allowed-origins: -*
+        exposed-headers: -*
+        allowed-headers: -*
