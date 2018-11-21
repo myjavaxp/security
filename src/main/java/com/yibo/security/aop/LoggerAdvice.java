@@ -19,7 +19,7 @@ public class LoggerAdvice {
     @Before("within(com.yibo.security..*) && @annotation(loggerManager)")
     public void addBeforeLogger(JoinPoint joinPoint, LoggerManager loggerManager) {
         LOGGER.info("执行[{}]开始", loggerManager.description());
-        LOGGER.info("获取方法签名[{}]", joinPoint.getSignature().toString());
+        LOGGER.info("方法名为:[{}]", joinPoint.getSignature().toShortString());
         LOGGER.info("传入参数:[{}]", parseParams(joinPoint.getArgs()));
     }
 
@@ -28,9 +28,9 @@ public class LoggerAdvice {
         LOGGER.info("执行[{}]结束", loggerManager.description());
     }
 
-    @AfterThrowing(pointcut = "within(com.yibo.security..*) && @annotation(loggerManager)", throwing = "ex")
-    public void addAfterThrowingLogger(LoggerManager loggerManager, Exception ex) {
-        LOGGER.error("执行[{}]发生异常", loggerManager.description(), ex);
+    @AfterThrowing(pointcut = "within(com.yibo.security..*) && @annotation(loggerManager)", throwing = "e")
+    public void addAfterThrowingLogger(LoggerManager loggerManager, Exception e) {
+        LOGGER.error("执行[{}]发生异常:{}", loggerManager.description(), e.getMessage());
     }
 
     private String parseParams(Object[] params) {
